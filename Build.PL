@@ -21,6 +21,8 @@ my $builder = $class->new(
     configure_requires => { 'Module::Build' => '0.36_14' },
     build_requires => {
         'File::Spec' => 0,
+        'IO::Scalar' => 0,
+        'Test::Builder' => 0,
         'Test::Exception' => 0,
         'Test::More' => 0,
         'Test::SetupTeardown' => 0,
@@ -34,7 +36,6 @@ my $builder = $class->new(
         'Test::Builder' => 0,
         'Text::ParseWords' => 0,
     },
-    release_status      => 'testing',
     add_to_cleanup      => [ 'Lembas-*' ],
     meta_merge          => { resources =>
                              { repository => 'https://bitbucket.org/fgabolde/Lembas' } },

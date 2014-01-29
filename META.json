@@ -17,6 +17,8 @@
       "build" : {
          "requires" : {
             "File::Spec" : "0",
+            "IO::Scalar" : "0",
+            "Test::Builder" : "0",
             "Test::Exception" : "0",
             "Test::More" : "0",
             "Test::SetupTeardown" : "0"
@@ -45,7 +47,7 @@
          "version" : "0.001"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "license" : [
          "http://dev.perl.org/licenses/"

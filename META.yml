@@ -4,6 +4,8 @@ author:
   - 'Fabrice Gabolde <fabrice.gabolde@gmail.com>'
 build_requires:
   File::Spec: 0
+  IO::Scalar: 0
+  Test::Builder: 0
   Test::Exception: 0
   Test::More: 0
   Test::SetupTeardown: 0
