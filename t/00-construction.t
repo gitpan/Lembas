@@ -29,7 +29,7 @@ lives_ok(sub { $lembas = Lembas->new(commands => [],
 is_deeply($lembas->shell, [ qw{examples/ush --horns 1} ],
           q{... and it stays that way});
 
-is($lembas->test_builder, Test::Builder->new,
+is($lembas->builder, Test::Builder->new,
        q{... and we can grab the global Test::Builder instance});
 
 done_testing;

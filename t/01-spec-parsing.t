@@ -13,10 +13,11 @@ use_ok 'Lembas';
 my $spec = <<'EOSPEC';
 #!examples/ush --horns 1
 preamble
-re: This is unicorn-shell version [\d.+]
+re: This is unicorn-shell version [\d.]+
     You have asked for a shell with 1 horn(s)
 fastforward some
     Starting REPL...
+    
     $ exit
 
 EOSPEC
@@ -31,18 +32,20 @@ is_deeply($lembas->commands, [
               { shell => undef,
                 outputs => [
                     { match_type => 'regex',
-                      output => 'This is unicorn-shell version [\\d.+]', },
+                      output => 'This is unicorn-shell version [\\d.]+', },
                     { match_type => 'literal',
                       output => 'You have asked for a shell with 1 horn(s)' },
                     { command => 'fastforward',
                       parameters => [ 'some' ] },
                     { match_type => 'literal',
-                      output => 'Starting REPL...' }, ] },
+                      output => 'Starting REPL...' },
+                    { match_type => 'literal',
+                      output => '' } ] },
               { shell => 'exit',
                 outputs => [] },
           ],
           q{... and the commands are all listed});
-is($lembas->plan_size, 5,
+is($lembas->plan_size, 6,
    q{... and they have a plan.});
 
 done_testing;

@@ -5,7 +5,6 @@ use warnings;
 use 5.010;
 use Carp;
 
-use Test::Builder;
 use Params::Validate qw/:types validate/;
 use IPC::Run qw/start/;
 use List::Util qw/sum/;
@@ -13,7 +12,9 @@ use Text::ParseWords;
 
 use Moo::Lax;
 
-our $VERSION = 0.001;
+our $VERSION = 0.002;
+
+extends 'Test::Builder::Module';
 
 has 'shell' => (is => 'ro',
                 required => 1,
@@ -47,10 +48,6 @@ has 'commands' => (is => 'ro',
                    isa => sub { ref $_[0]
                                     and ref $_[0] eq 'ARRAY'
                                     or die 'shell parameter must be an arrayref' });
-
-has 'test_builder' => (is => 'ro',
-                       default => sub { Test::Builder->new },
-                       handles => [ qw/is_passing/ ]);
 
 has 'plan_size' => (is => 'ro');
 
@@ -112,7 +109,7 @@ sub _pump_one_line {
 
         if (${$self->errput}) {
 
-            $self->test_builder->diag('STDERR: '.${$self->errput});
+            $self->builder->diag('STDERR: '.${$self->errput});
             ${$self->errput} = '';
 
         }
@@ -151,11 +148,11 @@ sub run {
             # called command "preamble", need to start matching output
             # *before* sending input
 
-            $self->test_builder->note('Matching preamble output...');
+            $self->builder->note('Matching preamble output...');
 
         } else {
 
-            $self->test_builder->note($command->{shell});
+            $self->builder->note($command->{shell});
             ${$self->input} .= $command->{shell} . "\n";
 
         }
@@ -163,9 +160,9 @@ sub run {
         my $fastforwarding = 0;
         my $fastforwarding_buffer;
         my $fastforwarding_sink;
-        my $fastforwarding_output_control = { current_output => $self->test_builder->output,
-                                              current_failure_output => $self->test_builder->failure_output,
-                                              current_todo_output => $self->test_builder->todo_output };
+        my $fastforwarding_output_control = { current_output => $self->builder->output,
+                                              current_failure_output => $self->builder->failure_output,
+                                              current_todo_output => $self->builder->todo_output };
 
         while (my $expected_output = shift @{$command->{outputs}}) {
 
@@ -175,11 +172,11 @@ sub run {
 
                 if ($expected_output->{command} eq 'fastforward') {
                     # handle params someday, for now assume "some"
-                    $self->test_builder->note('Fastforwarding...');
+                    $self->builder->note('Fastforwarding...');
                     $fastforwarding = 1;
-                    $self->test_builder->output(\$fastforwarding_buffer);
-                    $self->test_builder->failure_output(\$fastforwarding_sink);
-                    $self->test_builder->todo_output(\$fastforwarding_buffer);
+                    $self->builder->output(\$fastforwarding_buffer);
+                    $self->builder->failure_output(\$fastforwarding_sink);
+                    $self->builder->todo_output(\$fastforwarding_buffer);
                 } elsif ($expected_output->{command} eq 'wait_less_than') {
                     alarm $parameters[0];
                 } else {
@@ -191,7 +188,7 @@ sub run {
 
             }
 
-            $self->test_builder->note(sprintf(q{Waiting for a %s match of %s%s},
+            $self->builder->note(sprintf(q{Waiting for a %s match of %s%s},
                                               $expected_output->{match_type},
                                               $expected_output->{output},
                                               $fastforwarding ? ' (fastforward mode)' : ''))
@@ -206,11 +203,11 @@ sub run {
             if (my $error = $@) {
                 die unless $error eq "alarm\n";
                 # timed out
-                $self->test_builder->ok(0, "timed out");
-                $self->test_builder->BAIL_OUT('Dangerous to continue after a time out');
+                $self->builder->ok(0, "timed out");
+                $self->builder->BAIL_OUT('Dangerous to continue after a time out');
             } else {
                 if ($had_timeout) {
-                    $self->test_builder->ok(1, "output was present with $had_timeout seconds left before timeout");
+                    $self->builder->ok(1, "output was present with $had_timeout seconds left before timeout");
                 }
             }
 
@@ -220,14 +217,14 @@ sub run {
 
             if ($expected_output->{match_type} eq 'literal') {
 
-                $self->test_builder->is_eq($output, $expected_output->{output},
+                $self->builder->is_eq($output, $expected_output->{output},
                                            sprintf(q{literal match of '%s'}, $expected_output->{output}));
 
             } elsif ($expected_output->{match_type} eq 'regex') {
 
                 my $regex = $expected_output->{output};
                 use re 'eval'; # allow delayed interpolation trickery
-                $self->test_builder->like($output, qr/$regex/,
+                $self->builder->like($output, qr/$regex/,
                                           sprintf(q{regex match of '%s'}, $expected_output->{output}));
 
             } else {
@@ -239,7 +236,7 @@ sub run {
 
             if ($fastforwarding) {
 
-                my $tb = $self->test_builder;
+                my $tb = $self->builder;
                 my $current_test = $tb->current_test;
                 my @details = $tb->details;
                 if ($details[$current_test - 1]->{ok}) {
@@ -274,13 +271,13 @@ sub run {
 
         if (${$self->output}) {
 
-            $self->test_builder->ok(0, sprintf(q{extra unmatched output for '%s'},
+            $self->builder->ok(0, sprintf(q{extra unmatched output for '%s'},
                                                defined($command->{shell}) ? $command->{shell} : '<preamble>'));
-            $self->test_builder->diag(map { "'$_'" } split(/\r?\n/, ${$self->output}));
+            $self->builder->diag(map { "'$_'" } split(/\r?\n/, ${$self->output}));
 
         } else {
 
-            $self->test_builder->ok(1, sprintf(q{all output tested for '%s'},
+            $self->builder->ok(1, sprintf(q{all output tested for '%s'},
                                                defined($command->{shell}) ? $command->{shell} : '<preamble>'));
 
         }
@@ -603,7 +600,9 @@ a different program.
   plan tests => $lembas->plan_size + $the_rest;
 
 If you dislike C<done_testing>, you can use this method to obtain the
-number of tests that will be run by this Lembas instance.
+number of tests that will be run by this Lembas instance.  CAVEAT: it
+will only return a meaningful value if the Lembas instance was created
+with C<new_from_test_spec>.
 
 =head2 run
 

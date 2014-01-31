@@ -22,10 +22,9 @@ my $builder = $class->new(
     build_requires => {
         'File::Spec' => 0,
         'IO::Scalar' => 0,
-        'Test::Builder' => 0,
+        'Test::Builder::Tester' => 0,
         'Test::Exception' => 0,
         'Test::More' => 0,
-        'Test::SetupTeardown' => 0,
     },
     requires => {
         'perl' => 5.014,
@@ -33,9 +32,10 @@ my $builder = $class->new(
         'List::Util' => 0,
         'Moo::Lax' => 0,
         'Params::Validate' => 0,
-        'Test::Builder' => 0,
+        'Test::Builder::Module' => 0,
         'Text::ParseWords' => 0,
     },
+    recursive_test_files => 1,
     add_to_cleanup      => [ 'Lembas-*' ],
     meta_merge          => { resources =>
                              { repository => 'https://bitbucket.org/fgabolde/Lembas' } },

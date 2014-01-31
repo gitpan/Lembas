@@ -7,7 +7,9 @@ examples/ush
 lib/Lembas.pm
 lib/Lembas/Specification.pod
 MANIFEST			This list of files
-META.json
-META.yml
 t/00-construction.t
 t/01-spec-parsing.t
+t/commands/00-preamble.t
+t/commands/01-fastforward.t
+META.yml
+META.json
