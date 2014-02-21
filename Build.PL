@@ -27,7 +27,7 @@ my $builder = $class->new(
         'Test::More' => 0,
     },
     requires => {
-        'perl' => 5.014,
+        'perl' => 5.010,
         'IPC::Run' => 0,
         'List::Util' => 0,
         'Moo::Lax' => 0,

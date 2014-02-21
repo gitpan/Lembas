@@ -4,7 +4,7 @@
       "Fabrice Gabolde <fabrice.gabolde@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4204",
+   "generated_by" : "Module::Build version 0.4205",
    "license" : [
       "perl_5"
    ],
@@ -36,14 +36,14 @@
             "Params::Validate" : "0",
             "Test::Builder::Module" : "0",
             "Text::ParseWords" : "0",
-            "perl" : "5.014"
+            "perl" : "5.01"
          }
       }
    },
    "provides" : {
       "Lembas" : {
          "file" : "lib/Lembas.pm",
-         "version" : "0.002"
+         "version" : "0.003"
       }
    },
    "release_status" : "stable",
@@ -55,5 +55,5 @@
          "url" : "https://bitbucket.org/fgabolde/Lembas"
       }
    },
-   "version" : "0.002"
+   "version" : "0.003"
 }

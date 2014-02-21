@@ -153,6 +153,14 @@ able to C<sleep>.
 C<VALUE> may be any value.  C<UNIT> may be "second", "seconds",
 "minute" or "minutes".
 
+=head2 yield
+
+  yield
+
+The C<yield> command exits the Lembas loop mid-tests so that you can
+perform some other tasks.  You can resume the Lembas tests by calling
+the C<run> method again.
+
 =head1 AUTHOR
 
 Fabrice Gabolde <fabrice.gabolde@gmail.com>

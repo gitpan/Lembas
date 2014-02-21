@@ -1,0 +1,14 @@
+Revision history for Lembas
+
+0.003 The Distant Future
+
+  - "yield" command
+
+0.002 2014-01-31
+
+  - Subclass Test::Builder::Module instead of maintaining our own
+    Test::Builder attribute.
+
+0.001 2014-01-29
+
+  - Initial release on CPAN.

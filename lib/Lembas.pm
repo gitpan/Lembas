@@ -12,7 +12,7 @@ use Text::ParseWords;
 
 use Moo::Lax;
 
-our $VERSION = 0.002;
+our $VERSION = 0.003;
 
 extends 'Test::Builder::Module';
 
@@ -53,6 +53,9 @@ has 'plan_size' => (is => 'ro');
 
 has '_ansi_escape' => (is => 'ro',
                        default => sub { qr/\x{1B}\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]/ });
+
+has '_is_resuming' => (is => 'rw',
+                       default => sub { 0 });
 
 sub _build_subprocess {
 
@@ -141,19 +144,34 @@ sub run {
 
     my $self = shift;
 
-    foreach my $command (@{$self->commands}) {
+    while (@{$self->commands}) {
 
-        if (not defined $command->{shell}) {
+        # we are not shifting/popping from the commands arrayref
+        # because we need to be able to exit this loop and reenter at
+        # the same command, as long as it hasn't been completely
+        # processed, in case of "yield"
+        my $command = $self->commands->[0];
 
-            # called command "preamble", need to start matching output
-            # *before* sending input
+        if ($self->_is_resuming) {
 
-            $self->builder->note('Matching preamble output...');
+            $self->_is_resuming(0);
+            $self->builder->note('Resuming tests...');
 
         } else {
 
-            $self->builder->note($command->{shell});
-            ${$self->input} .= $command->{shell} . "\n";
+            if (not defined $command->{shell}) {
+
+                # called command "preamble", need to start matching
+                # output *before* sending input
+
+                $self->builder->note('Matching preamble output...');
+
+            } else {
+
+                $self->builder->note($command->{shell});
+                ${$self->input} .= $command->{shell} . "\n";
+
+            }
 
         }
 
@@ -179,6 +197,10 @@ sub run {
                     $self->builder->todo_output(\$fastforwarding_buffer);
                 } elsif ($expected_output->{command} eq 'wait_less_than') {
                     alarm $parameters[0];
+                } elsif ($expected_output->{command} eq 'yield') {
+                    $self->builder->note('Yielding control to calling script.');
+                    $self->_is_resuming(1);
+                    return $self;
                 } else {
                     croak(sprintf(q{unknown command '%s'},
                                   $expected_output->{command}));
@@ -284,6 +306,9 @@ sub run {
 
         # cleanup output to make room for the next command
         ${$self->output} = '';
+
+        # done with this one.
+        shift @{$self->commands};
 
     }
 
@@ -573,6 +598,9 @@ arguments".
 You'll notice that this works with or without the C<color> extension
 for Mercurial; Lembas removes ANSI terminal escape characters before
 matching output.
+
+The L<manual|Lembas::Specification> describes the syntax and lists the
+available commands.
 
 =head1 METHODS
 
