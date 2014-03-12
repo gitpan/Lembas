@@ -1,6 +1,20 @@
 Revision history for Lembas
 
-0.003 The Distant Future
+0.004 2014-03-12
+
+  - More thorough removal of (thanks to answers on
+    http://unix.stackexchange.com/q/14684)
+
+  - Full log of all input, output, errput captured, available in the object for post-mortems
+
+  - Fix bug where exceptions thrown by IPC::Run::start would never be
+    caught (confused with API from Proc::Simple where "start" returns
+    a boolean indicating success of failure)
+
+  - Fix bug where real exceptions thrown by _pump_one_line would get
+    rethrown as an empty string ("Died at...")
+
+0.003 2014-02-21
 
   - "yield" command
 

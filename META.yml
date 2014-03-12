@@ -20,7 +20,7 @@ name: Lembas
 provides:
   Lembas:
     file: lib/Lembas.pm
-    version: '0.003'
+    version: '0.004'
 requires:
   IPC::Run: '0'
   List::Util: '0'
@@ -32,4 +32,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: https://bitbucket.org/fgabolde/Lembas
-version: '0.003'
+version: '0.004'

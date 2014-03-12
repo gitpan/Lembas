@@ -12,7 +12,7 @@ use Text::ParseWords;
 
 use Moo::Lax;
 
-our $VERSION = 0.003;
+our $VERSION = 0.004;
 
 extends 'Test::Builder::Module';
 
@@ -51,33 +51,44 @@ has 'commands' => (is => 'ro',
 
 has 'plan_size' => (is => 'ro');
 
-has '_ansi_escape' => (is => 'ro',
-                       default => sub { qr/\x{1B}\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]/ });
-
 has '_is_resuming' => (is => 'rw',
                        default => sub { 0 });
+
+has 'full_log' => (is => 'ro',
+                   default => sub { [] });
 
 sub _build_subprocess {
 
     my $self = shift;
-    my $subprocess = start($self->shell,
-                           '<', $self->input,
-                           '1>', $self->output,
-                           '2>', $self->errput)
-        or croak(sprintf(q{Could not start subprocess with '%s': return code %d},
-                         join(' ', @{$self->shell}), $?));
+    my $subprocess = eval { start($self->shell,
+                                  '<', $self->input,
+                                  '1>', $self->output,
+                                  '2>', $self->errput) };
+
+    if (my $error = $@) {
+        croak(sprintf(q{Could not start subprocess with '%s': %s},
+                      join(' ', @{$self->shell}), $@));
+    }
 
     return $subprocess;
 
 }
 
-sub ansi_escape {
-
+sub cleanup_output {
     my ($self, $string) = @_;
-    my $ansi_escape = $self->_ansi_escape;
-    $string =~ s/$ansi_escape//g;
-    return $string;
 
+    my $string_copy = $string;
+
+    $string_copy =~ s/ \e[ #%()*+\-.\/]. |
+       \r |                                           # Remove extra carriage returns also
+       (?:\e\[|\x9b) [ -?]* [@-~] |                   # CSI ... Cmd
+       (?:\e\]|\x9d) .*? (?:\e\\|[\a\x9c]) |          # OSC ... (ST|BEL)
+       (?:\e[P^_]|[\x90\x9e\x9f]) .*? (?:\e\\|\x9c) | # (DCS|PM|APC) ... ST
+       \e.|[\x80-\x9f] //xg;
+    # remove non-backspace characters followed by a backspace
+    # character: "erase" the line as if it were displayed on screen
+    1 while $string_copy =~ s/[^\b][\b]//g;
+    return $string_copy;
 }
 
 sub new_from_test_spec {
@@ -113,6 +124,7 @@ sub _pump_one_line {
         if (${$self->errput}) {
 
             $self->builder->diag('STDERR: '.${$self->errput});
+            push @{$self->full_log}, { stderr => ${$self->errput} };
             ${$self->errput} = '';
 
         }
@@ -170,6 +182,7 @@ sub run {
 
                 $self->builder->note($command->{shell});
                 ${$self->input} .= $command->{shell} . "\n";
+                push @{$self->full_log}, { stdin => ${$self->input} };
 
             }
 
@@ -187,6 +200,9 @@ sub run {
             if (exists $expected_output->{command}) {
 
                 my @parameters = @{$expected_output->{parameters}};
+
+                push @{$self->full_log}, { command => $expected_output->{command},
+                                           parameters => $expected_output->{parameters} };
 
                 if ($expected_output->{command} eq 'fastforward') {
                     # handle params someday, for now assume "some"
@@ -211,9 +227,9 @@ sub run {
             }
 
             $self->builder->note(sprintf(q{Waiting for a %s match of %s%s},
-                                              $expected_output->{match_type},
-                                              $expected_output->{output},
-                                              $fastforwarding ? ' (fastforward mode)' : ''))
+                                         $expected_output->{match_type},
+                                         $expected_output->{output},
+                                         $fastforwarding ? ' (fastforward mode)' : ''))
                 if $self->{debug};
 
             my $had_timeout = eval {
@@ -223,7 +239,7 @@ sub run {
             };
 
             if (my $error = $@) {
-                die unless $error eq "alarm\n";
+                die $error unless $error eq "alarm\n";
                 # timed out
                 $self->builder->ok(0, "timed out");
                 $self->builder->BAIL_OUT('Dangerous to continue after a time out');
@@ -235,7 +251,9 @@ sub run {
 
             ${$self->output} =~ s/^([^\n]*?)\r?\n//;
             my $output = $1;
-            $output = $self->ansi_escape($output);
+            $output = $self->cleanup_output($output);
+
+            push @{$self->full_log}, { output => $output };
 
             if ($expected_output->{match_type} eq 'literal') {
 

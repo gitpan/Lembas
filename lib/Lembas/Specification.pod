@@ -68,8 +68,25 @@ output.  For example:
       $ pwd
       /tmp
 
-Lembas strips any output of its final C<CRLF> (or just C<LF>) and ANSI
-color escape characters, to increase readability.
+Lembas strips any output of its final C<CRLF> (or just C<LF>) and some
+other things, in order for test files to be reasonably easy to write:
+
+=over 4
+
+=item * carriage returns
+
+=item * ANSI escape sequences
+
+=item * non-backspace characters followed by a backspace character
+
+=back
+
+This means that you still have a chance of writing a working test file
+even if the interpreter prints "funny colored lines that don't move":
+
+  Starting foobar daemon...    [WAITING]
+  Starting foobar daemon...    [  OK   ]
+  foobar daemon started successfully!
 
 =head3 OUTPUT: REGEX MATCHING
 

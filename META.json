@@ -43,7 +43,7 @@
    "provides" : {
       "Lembas" : {
          "file" : "lib/Lembas.pm",
-         "version" : "0.003"
+         "version" : "0.004"
       }
    },
    "release_status" : "stable",
@@ -55,5 +55,5 @@
          "url" : "https://bitbucket.org/fgabolde/Lembas"
       }
    },
-   "version" : "0.003"
+   "version" : "0.004"
 }
